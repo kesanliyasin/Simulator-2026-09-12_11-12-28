@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5c570132ac060d4aa78a1307884c32c, type: 3}
   m_Name: TahtaTabla
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 
+  itemName: Tahta Tabla
   icon: {fileID: 0}
-  sellPrice: 0
+  sellPrice: 15
