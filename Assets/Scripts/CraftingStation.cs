@@ -16,10 +16,20 @@ public class CraftingStation : MonoBehaviour
 
     public bool CanCraft(Recipe recipe, Inventory inv)
     {
+        if (recipe == null || inv == null) return false;
+        if (recipe.requiredItems == null || recipe.requiredAmounts == null) return false;
+        if (recipe.requiredItems.Length != recipe.requiredAmounts.Length) return false;
+
         for (int i = 0; i < recipe.requiredItems.Length; i++)
         {
-            if (!inv.items.ContainsKey(recipe.requiredItems[i]) ||
-                inv.items[recipe.requiredItems[i]] < recipe.requiredAmounts[i])
+            var requiredItem = recipe.requiredItems[i];
+            if (requiredItem == null) return false;
+
+            string key = string.IsNullOrWhiteSpace(requiredItem.itemId)
+                ? requiredItem.name
+                : requiredItem.itemId;
+
+            if (!inv.items.ContainsKey(key) || inv.items[key] < recipe.requiredAmounts[i])
             {
                 return false;
             }
