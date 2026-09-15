@@ -11,6 +11,8 @@ public class PlayerInteraction : MonoBehaviour
     private ResourceNode hoveredTarget;
     private Camera cam;
     private CharacterAnimator characterAnimator;
+    private PlayerMovement playerMovement;
+    private ResourceNode pendingTarget;
     private bool isGathering = false;
 
     void Start()
@@ -18,15 +20,36 @@ public class PlayerInteraction : MonoBehaviour
         inventory = GetComponent<Inventory>();
         cam = Camera.main;
         characterAnimator = GetComponent<CharacterAnimator>();
+        playerMovement = GetComponent<PlayerMovement>();
     }
 
     void Update()
     {
         CheckHover();
 
-        if (Input.GetMouseButtonDown(0) && hoveredTarget != null && !isGathering)
+        if (isGathering) return;
+
+        if (HasManualMovementInput())
         {
-            TryGather(hoveredTarget);
+            CancelPendingGather();
+        }
+        else if (pendingTarget != null)
+        {
+            if (!pendingTarget.IsAvailable)
+            {
+                CancelPendingGather();
+            }
+            else if (GetHorizontalDistance(pendingTarget.transform.position) <= interactionRange)
+            {
+                ResourceNode target = pendingTarget;
+                CancelPendingGather();
+                StartCoroutine(GatherRoutine(target));
+            }
+        }
+
+        if (Input.GetMouseButtonDown(0) && hoveredTarget != null)
+        {
+            StartGathering(hoveredTarget);
         }
     }
 
@@ -59,23 +82,57 @@ public class PlayerInteraction : MonoBehaviour
         hoveredTarget = newHover;
     }
 
-    void TryGather(ResourceNode node)
+    void StartGathering(ResourceNode node)
     {
-        float distance = Vector3.Distance(transform.position, node.transform.position);
+        float distance = GetHorizontalDistance(node.transform.position);
 
         if (distance <= interactionRange)
         {
+            CancelPendingGather();
             StartCoroutine(GatherRoutine(node));
         }
         else
         {
-            Debug.Log("Çok uzak, yaklaşman lazım! Mesafe: " + distance);
+            pendingTarget = node;
+            if (playerMovement != null)
+            {
+                playerMovement.MoveTo(node.transform.position, interactionRange);
+            }
+            else
+            {
+                Debug.LogWarning("PlayerInteraction: PlayerMovement component bulunamadı.");
+            }
+        }
+    }
+
+    bool HasManualMovementInput()
+    {
+        return Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f;
+    }
+
+    float GetHorizontalDistance(Vector3 targetPosition)
+    {
+        Vector3 offset = targetPosition - transform.position;
+        offset.y = 0f;
+        return offset.magnitude;
+    }
+
+    void CancelPendingGather()
+    {
+        pendingTarget = null;
+        if (playerMovement != null)
+        {
+            playerMovement.CancelMoveTo();
         }
     }
 
     IEnumerator GatherRoutine(ResourceNode node)
     {
         isGathering = true;
+        if (playerMovement != null)
+        {
+            playerMovement.SetMovementLocked(true);
+        }
 
         if (characterAnimator != null)
         {
@@ -91,6 +148,10 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         isGathering = false;
+        if (playerMovement != null)
+        {
+            playerMovement.SetMovementLocked(false);
+        }
     }
 
     void OnDrawGizmosSelected()

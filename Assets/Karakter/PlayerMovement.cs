@@ -8,8 +8,33 @@ public class PlayerMovement : MonoBehaviour
 
     private CharacterController controller;
     private Vector3 velocity;
+    private bool isMovingToTarget;
+    private bool movementLocked;
+    private Vector3 targetPosition;
+    private float targetStopDistance;
 
     public Vector3 CurrentMoveDirection { get; private set; }
+
+    public void MoveTo(Vector3 position, float stopDistance)
+    {
+        targetPosition = position;
+        targetStopDistance = stopDistance;
+        isMovingToTarget = true;
+    }
+
+    public void CancelMoveTo()
+    {
+        isMovingToTarget = false;
+    }
+
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
+        if (locked)
+        {
+            CancelMoveTo();
+        }
+    }
 
     void Start()
     {
@@ -21,7 +46,29 @@ public class PlayerMovement : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        Vector3 moveDir = new Vector3(h, 0, v).normalized;
+        Vector3 moveDir = movementLocked
+            ? Vector3.zero
+            : new Vector3(h, 0, v).normalized;
+        if (moveDir.magnitude >= 0.1f)
+        {
+            isMovingToTarget = false;
+        }
+        else if (isMovingToTarget)
+        {
+            Vector3 direction = targetPosition - transform.position;
+            direction.y = 0f;
+
+            if (direction.magnitude <= targetStopDistance)
+            {
+                isMovingToTarget = false;
+                moveDir = Vector3.zero;
+            }
+            else
+            {
+                moveDir = direction.normalized;
+            }
+        }
+
         CurrentMoveDirection = moveDir;
 
         if (moveDir.magnitude >= 0.1f)

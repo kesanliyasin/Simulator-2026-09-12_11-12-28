@@ -19,17 +19,14 @@ public class CraftingStation : MonoBehaviour
         if (recipe == null || inv == null) return false;
         if (recipe.requiredItems == null || recipe.requiredAmounts == null) return false;
         if (recipe.requiredItems.Length != recipe.requiredAmounts.Length) return false;
+        if (recipe.resultItem == null || recipe.resultAmount <= 0) return false;
 
         for (int i = 0; i < recipe.requiredItems.Length; i++)
         {
             var requiredItem = recipe.requiredItems[i];
-            if (requiredItem == null) return false;
+            if (requiredItem == null || recipe.requiredAmounts[i] <= 0) return false;
 
-            string key = string.IsNullOrWhiteSpace(requiredItem.itemId)
-                ? requiredItem.name
-                : requiredItem.itemId;
-
-            if (!inv.items.ContainsKey(key) || inv.items[key] < recipe.requiredAmounts[i])
+            if (inv.GetItemCount(requiredItem) < recipe.requiredAmounts[i])
             {
                 return false;
             }
@@ -39,7 +36,11 @@ public class CraftingStation : MonoBehaviour
 
     public bool Craft(Recipe recipe, Inventory inv)
     {
-        if (!CanCraft(recipe, inv)) return false;
+        if (!CanCraft(recipe, inv))
+        {
+            Debug.LogWarning("CraftingStation: Tarif üretilemez; malzemeler veya tarif ayarları geçersiz.");
+            return false;
+        }
 
         for (int i = 0; i < recipe.requiredItems.Length; i++)
         {

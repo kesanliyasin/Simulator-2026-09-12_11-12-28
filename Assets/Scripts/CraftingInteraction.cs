@@ -20,15 +20,15 @@ public class CraftingInteraction : MonoBehaviour
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || station == null || playerInventory == null) return;
+        if (station.recipes == null || station.recipes.Length == 0) return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        Vector3 offset = transform.position - player.position;
+        offset.y = 0f;
+        float distance = offset.magnitude;
         if (distance <= interactionRange && Input.GetKeyDown(KeyCode.C))
         {
-            if (station.recipes.Length > 0)
-            {
-                station.Craft(station.recipes[0], playerInventory);
-            }
+            station.Craft(station.recipes[0], playerInventory);
         }
     }
 }

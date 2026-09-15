@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
+    [System.NonSerialized]
     public Dictionary<string, int> items = new Dictionary<string, int>();
 
     private string GetItemKey(ItemData item)
@@ -20,6 +21,14 @@ public class Inventory : MonoBehaviour
             return item.name;
 
         return item.itemName;
+    }
+
+    public int GetItemCount(ItemData item)
+    {
+        string key = GetItemKey(item);
+        if (string.IsNullOrEmpty(key)) return 0;
+
+        return items.TryGetValue(key, out int amount) ? amount : 0;
     }
 
     public void AddItem(ItemData item, int amount = 1)

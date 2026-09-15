@@ -18,22 +18,30 @@ public class ResourceNode : MonoBehaviour
     void Start()
     {
         rend = GetComponent<Renderer>();
-        originalColor = rend.material.color;
+        if (rend != null)
+        {
+            originalColor = rend.material.color;
+        }
     }
 
     public void Highlight()
     {
-        rend.material.color = highlightColor;
+        if (rend != null) rend.material.color = highlightColor;
     }
 
     public void Unhighlight()
     {
-        rend.material.color = originalColor;
+        if (rend != null) rend.material.color = originalColor;
     }
 
     public void Gather(Inventory playerInventory)
     {
         if (!isAvailable) return;
+        if (playerInventory == null || resourceItem == null)
+        {
+            Debug.LogWarning("ResourceNode: Inventory veya resourceItem eksik.");
+            return;
+        }
 
         playerInventory.AddItem(resourceItem, amountGiven);
         isAvailable = false;
